@@ -14,7 +14,7 @@ use <wr9p.scad>
 
 /* [Output Control] */
 // make which slice:
-slice = "top"; // [top, bottom, aux-side, usb-side]
+slice = "top"; // [top, bottom, aux-side, usb-side, test]
 // Make 2D xy projection
 $xy = true;
 // KiCad transformation
@@ -27,6 +27,26 @@ module __Customizer_Limit__ () {}
 echo( slice = slice );
 echo( $kicad = $kicad );
 echo( $xy = $xy );
+
+fid_size = 1.75;
+fid_wall = 0.01;
+fid_thk = 1.0;
+fid = [fid_size, fid_size, fid_thk];
+module fiducial(posn=[0,0]) {
+  translate([posn.x, posn.y, 0]) {
+    cube( [2*fid.x, fid_wall, fid.z], center=true );
+    cube( [fid_wall, 2*fid.y, fid.z], center=true );
+    *translate([+0.5*fid.x+0.5*eps, +0.5*fid.y+0.5*eps, 0])
+      cube( fid, center=true );
+    *translate([-0.5*fid.x-0.5*eps, -0.5*fid.y-0.5*eps, 0])
+      cube( fid, center=true );
+    *difference() {
+      cylinder(r=fid_size+2*fid_wall, h=fid_thk, center=true, $fn = 100);
+      cylinder(r=fid_size+fid_wall, h=fid_thk+eps, center=true, $fn = 100);
+    }
+  }
+}
+
 
 //========================================
 // code to make 2D XY DXF file:
@@ -63,6 +83,13 @@ echo( $xy = $xy );
 // SCAD design, I/O 10 posn connector points to the left
 // KiCad design, connector points down. 
 //
+// (4) Panel Reference Origin (correct description?)
+//
+// In KiCad design there is a reference origin related 
+// to the panel and rails. It is located at:
+//   x = 99.65 mm
+//   y = 125.1 mm
+//
 // ========================================
 // Sides of the enclosure, aux and USB connector
 //
@@ -83,20 +110,45 @@ s2k_rot = 90;
 // hole offsets
 hoff = [ 6.6, 6.6, 0.0 ];
 
+// panel origin offset
+poff = [ 99.65, 125.1 ];
+
 // separation between side views 
 // and main body
 soff_aux = 40;
 soff_usb = 30;
 
+// these convert children from enclosure SCAD view
+// into coordinate system suitable for KiCad design
 module scad2kicad() {
-  if($kicad)
-    mirror( [0,1,0] )
+  if($kicad) {
+    mirror( [0,1,0] ) {
+      projection() fiducial(poff);
       translate( s2k_off ) 
         rotate( s2k_rot, [0,0,1] )
           children();
+    }
+  } else {
+    children();
+  }
+}
+module scad2kicad_sides() {
+  if($kicad)
+    mirror( [0,1,0] ) {
+      translate( s2k_off ) 
+        rotate( s2k_rot, [0,0,1] )
+          children();
+    }
   else
     children();
 }
+
+// these functions position the object for projection 
+// into the XY plane in order to export to DXF files
+// The sides are a bit more difficult because they
+// have to slice the case to show the features.
+// Also have to add detailed I/O and aux I/O connectors
+// for pin-1 details.
 module project() {
   if($xy)
     projection() 
@@ -105,30 +157,20 @@ module project() {
   else 
     children();
 }
-
-module scad2kicad_sides() {
-  if($kicad)
-    mirror( [0,1,0] )
-      translate( s2k_off ) 
-        rotate( s2k_rot, [0,0,1] )
-          children();
-  else
-    children();
-}
 module project_aux_side() {
   if($xy) {
     translate( [case_h+0.5*body_xy+soff_aux,0,0]) 
       mirror([1,0,0])
-        projection(cut=true)
-          translate([0,0,0.5*body_xy-0.95*wall_width])
+      projection(cut=false)
+          translate([0,0,0.5*body_xy+5])
             rotate(90,[0,1,0])
               children();
   } else children();
 }
 module project_usb_side() {
   if($xy) {
-    translate( [-case_h-0.5*body_xy-soff_usb,0,0]) 
-    mirror([1,0,0])
+    //translate( [-case_h-0.5*body_xy-soff_usb,0,0]) 
+    //mirror([1,0,0])
     projection()
       translate([0,0,0.5*body_xy+2])
         rotate(-90,[0,1,0])
@@ -146,18 +188,25 @@ if( slice == "top" ) {
     project() 
       case_bottom();
 } else if( slice == "aux-side" ) {
-  *translate([0,0,bottom_h-bottom_lip_h])
-    header_10P();
+  *translate([0,0,bottom_h-bottom_lip_h]) header_10P();
   *scad2kicad() 
     project() 
       case_top();
   scad2kicad_sides()
     project_aux_side() {
-      display_together();
-        color("darkgreen") pcb();
-        translate([0,0,bottom_h-bottom_lip_h]) header_10P_detailed();
-        header_aux_detailed();
+      difference() {
+        union() {
+          display_together();
+          *color("darkgreen") pcb();
+          // adjust the detailed connectors to facilitate
+          // an accurate 2D projection
+          translate([2,0,bottom_h-bottom_lip_h]) header_10P_detailed();
+          translate([-2,0,0]) header_aux_detailed();
+        }
+        translate([-10,0,5])
+          cube( [body_xy, body_xy, case_h]+[10,10,10], center=true );
       }
+    }
 } else if( slice == "usb-side" ) {
   *scad2kicad() 
     project() 
@@ -165,4 +214,6 @@ if( slice == "top" ) {
   scad2kicad_sides()
     project_usb_side() 
       display_together();
+} else if( slice == "test" ) {
+  display_together();
 }

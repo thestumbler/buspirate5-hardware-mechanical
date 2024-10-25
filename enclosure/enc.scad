@@ -9,8 +9,6 @@ vf=360;
 version="10"; //version number
 version_h=1; //depth of version number pocket
 
-//epsilon value
-eps=0.01;
 
 use <hx10p.scad>
 

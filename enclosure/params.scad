@@ -1,3 +1,8 @@
+
+
+//epsilon value
+eps=0.01;
+
 //CASE BODY
 //case stackup
 echo("----------CASE----------");
