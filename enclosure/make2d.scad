@@ -5,10 +5,11 @@ include <BOSL2/std.scad>
 include <BOSL2/rounding.scad>
 include <BOSL2/screws.scad>
 
+
+// <BusPirate5REV8-v10.scad>
+use <enc.scad>
 include <params.scad>
 
-//use <BusPirate5REV8-v10.scad>
-use <enc.scad>
 use <hx10p.scad>
 use <wr9p.scad>
 
@@ -178,6 +179,9 @@ module project_usb_side() {
   } else children();
 }
 
+//========================================
+// Main slicing code
+//========================================
 
 if( slice == "top" ) {
   scad2kicad() 

@@ -408,5 +408,5 @@ module display_together(explode=0){
 //print_3d();
 //case_top();
 //case_bottom();
-//display_together();
+display_together();
 

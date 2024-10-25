@@ -1,4 +1,3 @@
-
 fid_size = 10;
 fid_thk = 1;
 fid = [fid_size, fid_size, fid_thk];
@@ -17,4 +16,4 @@ module fiducial(posn=[0,0,0]) {
   }
 }
 
-// fiducial([40,10,0]);
+fiducial();
