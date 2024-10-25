@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name "BusPirate-5-rev8-rescue")(type "Legacy")(uri "${KIPRJMOD}/BusPirate-5-rev8-rescue.lib")(options "")(descr ""))
-)
