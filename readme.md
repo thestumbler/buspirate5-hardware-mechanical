@@ -3,9 +3,9 @@
 This repo has some scripts to enable semi-automatic preparation of
 mechanical envelope drawing of the Bus Pirate 5 enclosure. 
 
-![](images/mech-user2.png)
+![](mech-user2.png)
 
-![](images/mech-user1.png)
+![](mech-user1.png)
 
 ## Background
 
